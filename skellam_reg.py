@@ -2,6 +2,7 @@
 from scipy.stats import skellam
 import numpy as np
 from scipy.optimize import minimize
+from metrics.skellam_metrics import SkellamMetrics
 
 
 class SkellamRegression:
@@ -69,3 +70,7 @@ class SkellamRegression:
         y_hat = _lambda1 - _lambda2
 
         return y_hat
+
+    def model_performance(self):
+        predictions = self.predict(self.x)
+        return SkellamMetrics(self.x, self.y, predictions)
