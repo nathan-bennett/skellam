@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 
 class SkellamMetrics:
@@ -17,6 +18,6 @@ class SkellamMetrics:
         return ((self.y - self.y_bar())**2).sum()
 
     def r2(self):
-        sse_sst = self.sse/self.sst
+        sse_sst = self.sse()/self.sst()
         return 1-sse_sst
 
