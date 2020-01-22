@@ -3,27 +3,29 @@ from scipy.stats import skellam
 import numpy as np
 from scipy.optimize import minimize
 from metrics.skellam_metrics import SkellamMetrics
+import pandas as pd
 
 
 class SkellamRegression:
 
     def __init__(self, x, y):
         self.y = y
-        if type(x) == np.ndarray:
-            self.x = np.matrix(x)
+        # convert x to be in the correct format - a 2 dimensional numpy array
+        if isinstance(x, np.ndarray) and x.ndim == 1:
+            self.x = x.reshape(-1, 1)
+        elif isinstance(x, pd.core.series.Series):
+            self.x = x.values.reshape(-1, 1)
         else:
             self.x = x
 
     def log_likelihood(self, coefficients):
-        coefficients1 = coefficients[0:len(coefficients) // 2]
-        coefficients2 = coefficients[len(coefficients) // 2:]
 
-        lambda1 = np.squeeze(
-            np.asarray(self.x @ np.matrix(coefficients1).T)
-        )
-        lambda2 = np.squeeze(
-            np.asarray(self.x @ np.matrix(coefficients2).T)
-        )
+        self.coeff_size = len(coefficients) // 2
+        coefficients1 = coefficients[0:self.coeff_size].reshape(-1, 1)
+        coefficients2 = coefficients[self.coeff_size:].reshape(-1, 1)
+
+        lambda1 = np.squeeze(self.x @ coefficients1)
+        lambda2 = np.squeeze(self.x @ coefficients2)
 
         neg_log_likelihood = -np.sum(skellam.logpmf(self.y, mu1=np.exp(lambda1), mu2=np.exp(lambda2), loc=0))
 
@@ -50,22 +52,16 @@ class SkellamRegression:
         return self._train(x0, optimization_method, display_optimisation)
 
     def predict(self, x):
-        if type(x) == np.ndarray:
-            x = np.matrix(x)
+        if isinstance(x, np.ndarray) and x.ndim == 1:
+            x = x.reshape(-1, 1)
+        elif isinstance(x, pd.core.series.Series):
+            x = x.values.reshape(-1, 1)
 
-        lambda_1_coefficients = self._results.x[0:len(self._results.x) // 2]
-        lambda_2_coefficients = self._results.x[len(self._results.x) // 2:]
+        lambda_1_coefficients = self._results.x[0: self.coeff_size].reshape(-1, 1)
+        lambda_2_coefficients = self._results.x[self.coeff_size:].reshape(-1, 1)
 
-        _lambda1 = np.exp(
-            np.squeeze(
-                np.asarray(x @ np.matrix(lambda_1_coefficients).T)
-            )
-        )
-        _lambda2 = np.exp(
-            np.squeeze(
-                np.asarray(x @ np.matrix(lambda_2_coefficients).T)
-            )
-        )
+        _lambda1 = np.exp(np.squeeze(x @ lambda_1_coefficients))
+        _lambda2 = np.exp(np.squeeze(x @ lambda_2_coefficients))
 
         y_hat = _lambda1 - _lambda2
 
