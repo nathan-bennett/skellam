@@ -39,7 +39,8 @@ class SkellamRegression:
         return px
 
     def log_likelihood(self, coefficients):
-
+        """Function to calculate the negative log likelihood of the skellam distribution
+        """
         self.coeff_size = len(coefficients) // 2
         coefficients1 = coefficients[0:self.coeff_size].reshape(-1, 1)
         coefficients2 = coefficients[self.coeff_size:].reshape(-1, 1)
@@ -52,6 +53,8 @@ class SkellamRegression:
         return neg_ll
 
     def _train(self, x0, optimization_method, display_optimisation):
+        """Function which minimizes the negative log likelihood to find the optimal values for our coefficients
+        """
         # initial estimate
         if x0 is None:
             x0 = np.ones(self.x.shape[1] * 2)
@@ -72,6 +75,8 @@ class SkellamRegression:
         return self._train(x0, optimization_method, display_optimisation)
 
     def predict(self, x):
+        """Using the model created previously, this will predict values of y based on a new array x
+        """
         if isinstance(x, np.ndarray) and x.ndim == 1:
             x = x.reshape(-1, 1)
         elif isinstance(x, pd.core.series.Series):
@@ -88,5 +93,7 @@ class SkellamRegression:
         return y_hat
 
     def model_performance(self):
+        """Calculate key metrics such as r2
+        """
         predictions = self.predict(self.x)
         return SkellamMetrics(self.x, self.y, predictions)
