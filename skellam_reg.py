@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-from scipy.stats import skellam
 import numpy as np
 from scipy.optimize import minimize
 from metrics.skellam_metrics import SkellamMetrics
 import pandas as pd
+from scipy.special import ive, xlogy
 
 
 class SkellamRegression:
 
     def __init__(self, x, y):
         self.y = y
+        self.coeff_size = None
         # convert x to be in the correct format - a 2 dimensional numpy array
         if isinstance(x, np.ndarray) and x.ndim == 1:
             self.x = x.reshape(-1, 1)
@@ -17,6 +18,25 @@ class SkellamRegression:
             self.x = x.values.reshape(-1, 1)
         else:
             self.x = x
+
+    def _non_central_x2_pmf(self, x, df, nc):
+        """This is the probability mass function of the non-central chi-squared distribution
+        This was derived from the scipy stats package.
+        """
+        df2 = df / 2.0 - 1.0
+        xs, ns = np.sqrt(x), np.sqrt(nc)
+        res = xlogy(df2 / 2.0, x / nc) - 0.5 * (xs - ns) ** 2 + np.log(ive(df2, xs * ns) / 2.0)
+        return res
+
+    def _skellam_pmf(self, x, mu1, mu2):
+        """
+        This is the probability mass function of the skellam distribution
+        This was derived from the scipy stats package.
+        """
+        px = np.where(x < 0,
+                      np.exp(self._non_central_x2_pmf(2 * mu2, 2 * (1 - x), 2 * mu1) * 2),
+                      np.exp(self._non_central_x2_pmf(2 * mu1, 2 * (1 + x), 2 * mu2) * 2))
+        return px
 
     def log_likelihood(self, coefficients):
 
@@ -27,9 +47,9 @@ class SkellamRegression:
         lambda1 = np.squeeze(self.x @ coefficients1)
         lambda2 = np.squeeze(self.x @ coefficients2)
 
-        neg_log_likelihood = -np.sum(skellam.logpmf(self.y, mu1=np.exp(lambda1), mu2=np.exp(lambda2), loc=0))
+        neg_ll = -np.sum(np.log(self._skellam_pmf(self.y, np.exp(lambda1), np.exp(lambda2))))
 
-        return neg_log_likelihood
+        return neg_ll
 
     def _train(self, x0, optimization_method, display_optimisation):
         # initial estimate
@@ -60,10 +80,10 @@ class SkellamRegression:
         lambda_1_coefficients = self._results.x[0: self.coeff_size].reshape(-1, 1)
         lambda_2_coefficients = self._results.x[self.coeff_size:].reshape(-1, 1)
 
-        _lambda1 = np.exp(np.squeeze(x @ lambda_1_coefficients))
-        _lambda2 = np.exp(np.squeeze(x @ lambda_2_coefficients))
+        _lambda1 = np.squeeze(x @ lambda_1_coefficients)
+        _lambda2 = np.squeeze(x @ lambda_2_coefficients)
 
-        y_hat = _lambda1 - _lambda2
+        y_hat = np.exp(_lambda1) - np.exp(_lambda2)
 
         return y_hat
 
