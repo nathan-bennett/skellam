@@ -5,7 +5,7 @@ Skellam is a personal python project I have been working on which allows you to 
 
 The Skellam distribution is a frequency distribution of the difference between two independent variates following the 
 same Poisson distribution (Irwin, 1937). One notable example that follows a Skellam distribution is the margin in a soccer game as this is the difference
-between two Poisson distributed variables, the home team's score and the away tea'ms score.
+between two Poisson distributed variables, the home team's score and the away team's score.
 
 
 ## Usage
