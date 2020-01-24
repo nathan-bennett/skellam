@@ -4,6 +4,7 @@ from scipy.optimize import minimize
 from metrics.skellam_metrics import SkellamMetrics
 import pandas as pd
 from scipy.special import ive, xlogy
+import warnings
 
 
 class SkellamRegression:
@@ -60,6 +61,8 @@ class SkellamRegression:
             if x0.shape[0] != self.x.shape[1] * 2:
                 raise ValueError
 
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+
         results = minimize(self.log_likelihood,
                            x0,
                            method=optimization_method,
@@ -69,7 +72,7 @@ class SkellamRegression:
 
         return results
 
-    def train(self, x0=None, optimization_method="SLSQP", display_optimisation=True):
+    def train(self, x0=None, optimization_method="SLSQP", display_optimisation=False):
         """Minmizes the negative log likelihood to find the optimal values for our coefficients
         """
         return self._train(x0, optimization_method, display_optimisation)
