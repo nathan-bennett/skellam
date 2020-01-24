@@ -19,8 +19,7 @@ class SkellamRegression:
         else:
             self.x = x
 
-    @staticmethod
-    def _non_central_x2_pmf(x, df, nc):
+    def _non_central_x2_pmf(self, x, df, nc):
         """This is the probability mass function of the non-central chi-squared distribution
         This was derived from the scipy stats package.
         """
@@ -54,8 +53,6 @@ class SkellamRegression:
         return neg_ll
 
     def _train(self, x0, optimization_method, display_optimisation):
-        """Function which minimizes the negative log likelihood to find the optimal values for our coefficients
-        """
         # initial estimate
         if x0 is None:
             x0 = np.ones(self.x.shape[1] * 2)
@@ -73,6 +70,8 @@ class SkellamRegression:
         return results
 
     def train(self, x0=None, optimization_method="SLSQP", display_optimisation=True):
+        """Minmizes the negative log likelihood to find the optimal values for our coefficients
+        """
         return self._train(x0, optimization_method, display_optimisation)
 
     def predict(self, x):
