@@ -19,7 +19,8 @@ class SkellamRegression:
         else:
             self.x = x
 
-    def _non_central_x2_pmf(self, x, df, nc):
+    @staticmethod
+    def _non_central_x2_pmf(x, df, nc):
         """This is the probability mass function of the non-central chi-squared distribution
         This was derived from the scipy stats package.
         """
