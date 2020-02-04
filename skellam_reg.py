@@ -9,16 +9,21 @@ import warnings
 
 class SkellamRegression:
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, add_coefficients=True):
         self.y = y
+        self.add_coefficients = add_coefficients
         self.coeff_size = None
         # convert x to be in the correct format - a 2 dimensional numpy array
-        if isinstance(x, np.ndarray) and x.ndim == 1:
-            self.x = x.reshape(-1, 1)
-        elif isinstance(x, pd.core.series.Series):
-            self.x = x.values.reshape(-1, 1)
+        self.x = self.convert_to_array(x)
+
+    @staticmethod
+    def convert_to_array(_x):
+        if isinstance(_x, np.ndarray) and _x.ndim == 1:
+            return _x.reshape(-1, 1)
+        elif isinstance(_x, pd.core.series.Series):
+            return _x.values.reshape(-1, 1)
         else:
-            self.x = x
+            return _x
 
     def _non_central_x2_pmf(self, x, df, nc):
         """This is the probability mass function of the non-central chi-squared distribution
@@ -80,10 +85,7 @@ class SkellamRegression:
     def predict(self, x):
         """Using the model created previously, this will predict values of y based on a new array x
         """
-        if isinstance(x, np.ndarray) and x.ndim == 1:
-            x = x.reshape(-1, 1)
-        elif isinstance(x, pd.core.series.Series):
-            x = x.values.reshape(-1, 1)
+        x = self.convert_to_array(x)
 
         lambda_1_coefficients = self._results.x[0: self.coeff_size].reshape(-1, 1)
         lambda_2_coefficients = self._results.x[self.coeff_size:].reshape(-1, 1)
@@ -95,8 +97,14 @@ class SkellamRegression:
 
         return y_hat
 
-    def model_performance(self):
+    def model_performance(self, test_x=None, test_y=None):
         """Calculate key metrics such as r2
         """
-        predictions = self.predict(self.x)
-        return SkellamMetrics(self.x, self.y, predictions)
+        if test_x is not None and test_y is not None:
+            test_x = self.convert_to_array(test_x)
+            predictions = self.predict(test_x)
+            return SkellamMetrics(test_x, test_y, predictions)
+        else:
+            predictions = self.predict(self.x)
+            return SkellamMetrics(self.x, self.y, predictions)
+
