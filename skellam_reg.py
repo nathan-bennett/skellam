@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import numpy as np
 from scipy.optimize import minimize
+from scipy.stats import skellam
 from metrics.skellam_metrics import SkellamMetrics
 import pandas as pd
-from scipy.special import ive, xlogy
 import warnings
 
 
@@ -13,11 +13,12 @@ class SkellamRegression:
         self.y = y
         self.add_coefficients = add_coefficients
         self.coeff_size = None
-        # convert x to be in the correct format - a 2 dimensional numpy array
-        self.x = self.convert_to_array(x)
+        self.x = self._convert_to_array(x)
 
     @staticmethod
-    def convert_to_array(_x):
+    def _convert_to_array(_x):
+        """ Convert x to be in the correct format - a 2 dimensional numpy array
+        """
         if isinstance(_x, np.ndarray) and _x.ndim == 1:
             return _x.reshape(-1, 1)
         elif isinstance(_x, pd.core.series.Series):
@@ -25,27 +26,8 @@ class SkellamRegression:
         else:
             return _x
 
-    def _non_central_x2_pmf(self, x, df, nc):
-        """This is the probability mass function of the non-central chi-squared distribution
-        This was derived from the scipy stats package.
-        """
-        df2 = df / 2.0 - 1.0
-        xs, ns = np.sqrt(x), np.sqrt(nc)
-        res = xlogy(df2 / 2.0, x / nc) - 0.5 * (xs - ns) ** 2 + np.log(ive(df2, xs * ns) / 2.0)
-        return res
-
-    def _skellam_pmf(self, x, mu1, mu2):
-        """
-        This is the probability mass function of the skellam distribution
-        This was derived from the scipy stats package.
-        """
-        px = np.where(x < 0,
-                      np.exp(self._non_central_x2_pmf(2 * mu2, 2 * (1 - x), 2 * mu1) * 2),
-                      np.exp(self._non_central_x2_pmf(2 * mu1, 2 * (1 + x), 2 * mu2) * 2))
-        return px
-
     def log_likelihood(self, coefficients):
-        """Function to calculate the negative log likelihood of the skellam distribution
+        """Function to calculate the negative log likelihood of the Skellam distribution
         """
         self.coeff_size = len(coefficients) // 2
         coefficients1 = coefficients[0:self.coeff_size].reshape(-1, 1)
@@ -54,7 +36,7 @@ class SkellamRegression:
         lambda1 = np.squeeze(self.x @ coefficients1)
         lambda2 = np.squeeze(self.x @ coefficients2)
 
-        neg_ll = -np.sum(np.log(self._skellam_pmf(self.y, np.exp(lambda1), np.exp(lambda2))))
+        neg_ll = -np.sum(skellam.logpmf(self.y, np.exp(lambda1), np.exp(lambda2)))
 
         return neg_ll
 
@@ -85,7 +67,7 @@ class SkellamRegression:
     def predict(self, x):
         """Using the model created previously, this will predict values of y based on a new array x
         """
-        x = self.convert_to_array(x)
+        x = self._convert_to_array(x)
 
         lambda_1_coefficients = self._results.x[0: self.coeff_size].reshape(-1, 1)
         lambda_2_coefficients = self._results.x[self.coeff_size:].reshape(-1, 1)
@@ -101,7 +83,7 @@ class SkellamRegression:
         """Calculate key metrics such as r2
         """
         if test_x is not None and test_y is not None:
-            test_x = self.convert_to_array(test_x)
+            test_x = self._convert_to_array(test_x)
             predictions = self.predict(test_x)
             return SkellamMetrics(test_x, test_y, predictions)
         else:
