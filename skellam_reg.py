@@ -9,8 +9,10 @@ import warnings
 
 class SkellamRegression:
 
-    def __init__(self, x, y, add_coefficients=True):
+    def __init__(self, x, y, l1, l2, add_coefficients=True):
         self.y = y
+        self.l1 = l1
+        self.l2 = l2
         self.add_coefficients = add_coefficients
         self.coeff_size = None
         # convert x to be in the correct format - a 2 dimensional numpy array
@@ -59,14 +61,20 @@ class SkellamRegression:
         return neg_ll
 
     def _train(self, x0, optimization_method, display_optimisation):
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
         # initial estimate
         if x0 is None:
             x0 = np.ones(self.x.shape[1] * 2)
+
+            first_run = minimize(self.log_likelihood,
+                                 x0,
+                                 method=optimization_method,
+                                 options={'disp': display_optimisation})
+
+            x0 = first_run.x
         else:
             if x0.shape[0] != self.x.shape[1] * 2:
                 raise ValueError
-
-        warnings.filterwarnings("ignore", category=RuntimeWarning)
 
         results = minimize(self.log_likelihood,
                            x0,
@@ -82,16 +90,16 @@ class SkellamRegression:
         """
         return self._train(x0, optimization_method, display_optimisation)
 
-    def predict(self, x):
+    def predict(self, _x):
         """Using the model created previously, this will predict values of y based on a new array x
         """
-        x = self.convert_to_array(x)
+        _x = self.convert_to_array(_x)
 
         lambda_1_coefficients = self._results.x[0: self.coeff_size].reshape(-1, 1)
         lambda_2_coefficients = self._results.x[self.coeff_size:].reshape(-1, 1)
 
-        _lambda1 = np.squeeze(x @ lambda_1_coefficients)
-        _lambda2 = np.squeeze(x @ lambda_2_coefficients)
+        _lambda1 = np.squeeze(_x @ lambda_1_coefficients)
+        _lambda2 = np.squeeze(_x @ lambda_2_coefficients)
 
         y_hat = np.exp(_lambda1) - np.exp(_lambda2)
 
@@ -103,8 +111,8 @@ class SkellamRegression:
         if test_x is not None and test_y is not None:
             test_x = self.convert_to_array(test_x)
             predictions = self.predict(test_x)
-            return SkellamMetrics(test_x, test_y, predictions)
+            return SkellamMetrics(test_x, test_y, predictions, self._results, self.l1, self.l2)
         else:
             predictions = self.predict(self.x)
-            return SkellamMetrics(self.x, self.y, predictions)
+            return SkellamMetrics(self.x, self.y, predictions, self._results, self.l1, self.l2)
 
