@@ -32,17 +32,16 @@ class SkellamMetrics:
         if x is a list then we will split the list where the first element will be equal to x0 whilst the second
         element will be equal to x1
         """
-        x0 = None
-        x1 = None
         if isinstance(x, np.ndarray) or isinstance(x, pd.core.series.Series) or isinstance(x, pd.core.frame.DataFrame):
             x0, x1 = x, x
         elif len(x) == 2:
             if isinstance(x[0], np.ndarray) or isinstance(x[0], pd.core.series.Series) or isinstance(x, pd.core.frame.DataFrame):
                 x0 = self.convert_to_array(x[0])
+            else:
+                x0 = x[0]
             if isinstance(x[1], np.ndarray) or isinstance(x[1], pd.core.series.Series) or isinstance(x, pd.core.frame.DataFrame):
                 x1 = self.convert_to_array(x[1])
             else:
-                x0 = x[0]
                 x1 = x[1]
         else:
             raise ValueError("x must either be an a list of two arrays or a single array")
