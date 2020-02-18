@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import scipy
+import pandas as pd
 
 
 class SkellamMetrics:
@@ -10,11 +11,20 @@ class SkellamMetrics:
         self._y = y
         self._y_hat = y_hat
         self.model = model
-        self.l1 = l1
-        self.l2 = l2
-        self.coeff_size = len(model) // 2
-        self.lambda_1_coefficients = model[0: self.coeff_size].reshape(-1, 1)
-        self.lambda_2_coefficients = model[self.coeff_size:].reshape(-1, 1)
+        self.l1 = self.convert_to_array(l1)
+        self.l2 = self.convert_to_array(l2)
+        self.coeff_size = len(model.x) // 2
+        self.lambda_1_coefficients = self.model.x[0: self.coeff_size].reshape(-1, 1)
+        self.lambda_2_coefficients = self.model.x[self.coeff_size:].reshape(-1, 1)
+
+    @staticmethod
+    def convert_to_array(_x):
+        if isinstance(_x, np.ndarray) and _x.ndim == 1:
+            return _x.reshape(-1, 1)
+        elif isinstance(_x, pd.core.series.Series):
+            return _x.values.reshape(-1, 1)
+        else:
+            return _x
 
     def sse(self):
         return ((self._y - self._y_hat)**2).sum()
@@ -31,15 +41,15 @@ class SkellamMetrics:
 
     def _calculate_lambda(self):
         _lambda = dict()
-        _lambda['1'] = np.exp(np.squeeze(self._x @ self.lambda_1_coefficients))
-        _lambda['2'] = np.exp(np.squeeze(self._x @ self.lambda_2_coefficients))
+        _lambda['1'] = self.convert_to_array(np.exp(np.squeeze(self._x @ self.lambda_1_coefficients)))
+        _lambda['2'] = self.convert_to_array(np.exp(np.squeeze(self._x @ self.lambda_2_coefficients)))
         return _lambda
 
     def _calculate_v(self):
         _lambda = self._calculate_lambda()
         _v = dict()
-        _v['1'] = np.diagflat(_lambda['1'])
-        _v['2'] = np.diagflat(_lambda['2'])
+        _v['1'] = np.diagflat(self.convert_to_array(_lambda['1']))
+        _v['2'] = np.diagflat(self.convert_to_array(_lambda['2']))
         return _v
 
     def _calculate_w(self):
@@ -62,17 +72,17 @@ class SkellamMetrics:
         return _robust_cov
 
     def _calculate_robust_standard_errors(self):
-        _std_error = dict()
         _robust_cov = self._calculate_robust_covariance()
+        _std_error = dict()
         _std_error['1'] = np.sqrt(np.diag(_robust_cov['1']))
         _std_error['2'] = np.sqrt(np.diag(_robust_cov['2']))
         return _std_error
 
     def _calculate_z_values(self):
-        _std_error = self._calculate_robust_standard_errors
+        _std_error = self._calculate_robust_standard_errors()
         _z_values = dict()
-        _z_values['1'] = self.lambda_1_coefficients / _std_error['1']
-        _z_values['1'] = self.lambda_2_coefficients / _std_error['2']
+        _z_values['1'] = self.lambda_1_coefficients[:, 0] / _std_error['1']
+        _z_values['2'] = self.lambda_2_coefficients[:, 0] / _std_error['2']
         return _z_values
 
     def _calculate_p_values(self):
@@ -81,5 +91,3 @@ class SkellamMetrics:
         _p_values['1'] = scipy.stats.norm.sf(abs(_z_values['1'])) * 2
         _p_values['2'] = scipy.stats.norm.sf(abs(_z_values['2'])) * 2
         return _p_values
-
-
