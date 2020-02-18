@@ -36,23 +36,31 @@ class SkellamMetrics:
         return ((self._y - self._y_bar())**2).sum()
 
     def r2(self):
+        """Calculate R2 for either the train model """
         sse_sst = self.sse()/self.sst()
         return 1-sse_sst
 
     def _calculate_lambda(self):
+        """Create arrays for our predictions of the two Poisson distributions
+        """
         _lambda = dict()
         _lambda['1'] = self.convert_to_array(np.exp(np.squeeze(self._x @ self.lambda_1_coefficients)))
         _lambda['2'] = self.convert_to_array(np.exp(np.squeeze(self._x @ self.lambda_2_coefficients)))
         return _lambda
 
     def _calculate_v(self):
+        """Create diagonal matrix consisting of our predictions of the Poisson distributions
+        """
         _lambda = self._calculate_lambda()
         _v = dict()
-        _v['1'] = np.diagflat(self.convert_to_array(_lambda['1']))
-        _v['2'] = np.diagflat(self.convert_to_array(_lambda['2']))
+        _v['1'] = np.diagflat(_lambda['1'])
+        _v['2'] = np.diagflat(_lambda['2'])
         return _v
 
     def _calculate_w(self):
+        """Create a diagonal matrix consisting of the difference between our predictions of the 2 Poisson distributions
+        with their observed values
+        """
         _lambda = self._calculate_lambda()
         _w = dict()
         _w['1'] = np.diagflat((self.l1 - _lambda['1'].reshape(-1, 1)) ** 2)
@@ -60,6 +68,8 @@ class SkellamMetrics:
         return _w
 
     def _calculate_robust_covariance(self):
+        """Calculate robust variance covariance matrices for our two sets of coefficients
+        """
         _v = self._calculate_v()
         _w = self._calculate_w()
         _robust_cov = dict()
@@ -72,6 +82,8 @@ class SkellamMetrics:
         return _robust_cov
 
     def _calculate_robust_standard_errors(self):
+        """Calculate robust standard errors for our two sets of coefficients
+        """
         _robust_cov = self._calculate_robust_covariance()
         _std_error = dict()
         _std_error['1'] = np.sqrt(np.diag(_robust_cov['1']))
@@ -79,6 +91,8 @@ class SkellamMetrics:
         return _std_error
 
     def _calculate_z_values(self):
+        """Calculate z statistics for our two sets of coefficients
+        """
         _std_error = self._calculate_robust_standard_errors()
         _z_values = dict()
         _z_values['1'] = self.lambda_1_coefficients[:, 0] / _std_error['1']
@@ -86,6 +100,8 @@ class SkellamMetrics:
         return _z_values
 
     def _calculate_p_values(self):
+        """Calculate p values for our two sets of coefficients
+        """
         _z_values = self._calculate_z_values()
         _p_values = dict()
         _p_values['1'] = scipy.stats.norm.sf(abs(_z_values['1'])) * 2
