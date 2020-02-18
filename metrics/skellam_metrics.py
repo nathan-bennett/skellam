@@ -28,29 +28,38 @@ class SkellamMetrics:
         sse_sst = self.sse()/self.sst()
         return 1-sse_sst
 
-    def calculate_lambda(self):
+    def _calculate_lambda(self):
         _lambda = dict()
         _lambda['1'] = np.exp(np.squeeze(self._x @ self.lambda_1_coefficients))
         _lambda['2'] = np.exp(np.squeeze(self._x @ self.lambda_2_coefficients))
         return _lambda
 
-    def calculate_v(self):
-        _lambda = self.calculate_lambda()
+    def _calculate_v(self):
+        _lambda = self._calculate_lambda()
         _v = dict()
         _v['1'] = np.diagflat(_lambda['1'])
         _v['2'] = np.diagflat(_lambda['2'])
         return _v
 
-    def calculate_w(self):
-        _lambda = self.calculate_lambda()
+    def _calculate_w(self):
+        _lambda = self._calculate_lambda()
         _w = dict()
         _w['1'] = np.diagflat((self.l1 - _lambda['1'].reshape(-1, 1)) ** 2)
         _w['2'] = np.diagflat((self.l2 - _lambda['2'].reshape(-1, 1)) ** 2)
         return _w
 
-    def calculate_robust_covariance(self):
-        _v = self.calculate_v()
-        _w = self.calculate_w()
+    def _calculate_robust_covariance(self):
+        _v = self._calculate_v()
+        _w = self._calculate_w()
+        robustCov = dict()
+        robustCov['1'] = np.linalg.inv(np.dot(np.dot(self._x.T, _v['1']), self._x)) \
+                         * np.dot(np.dot(self._x.T, _w['1']), self._x) \
+                         * np.linalg.inv(np.dot(np.dot(self._x.T, _v['1']), self._x))
+        robustCov['2'] = np.linalg.inv(np.dot(np.dot(self._x.T, _v['2']), self._x)) \
+                         * np.dot(np.dot(self._x.T, _w['2']), self._x) \
+                         * np.linalg.inv(np.dot(np.dot(self._x.T, _v['2']), self._x))
+        return robustCov
 
+    def
 
 
