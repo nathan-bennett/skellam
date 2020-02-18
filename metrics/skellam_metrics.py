@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+import scipy
 
 
 class SkellamMetrics:
@@ -51,15 +52,34 @@ class SkellamMetrics:
     def _calculate_robust_covariance(self):
         _v = self._calculate_v()
         _w = self._calculate_w()
-        robustCov = dict()
-        robustCov['1'] = np.linalg.inv(np.dot(np.dot(self._x.T, _v['1']), self._x)) \
-                         * np.dot(np.dot(self._x.T, _w['1']), self._x) \
-                         * np.linalg.inv(np.dot(np.dot(self._x.T, _v['1']), self._x))
-        robustCov['2'] = np.linalg.inv(np.dot(np.dot(self._x.T, _v['2']), self._x)) \
-                         * np.dot(np.dot(self._x.T, _w['2']), self._x) \
-                         * np.linalg.inv(np.dot(np.dot(self._x.T, _v['2']), self._x))
-        return robustCov
+        _robust_cov = dict()
+        _robust_cov['1'] = np.linalg.inv(np.dot(np.dot(self._x.T, _v['1']), self._x)) \
+                           * np.dot(np.dot(self._x.T, _w['1']), self._x) \
+                           * np.linalg.inv(np.dot(np.dot(self._x.T, _v['1']), self._x))
+        _robust_cov['2'] = np.linalg.inv(np.dot(np.dot(self._x.T, _v['2']), self._x)) \
+                           * np.dot(np.dot(self._x.T, _w['2']), self._x) \
+                           * np.linalg.inv(np.dot(np.dot(self._x.T, _v['2']), self._x))
+        return _robust_cov
 
-    def
+    def _calculate_robust_standard_errors(self):
+        _std_error = dict()
+        _robust_cov = self._calculate_robust_covariance()
+        _std_error['1'] = np.sqrt(np.diag(_robust_cov['1']))
+        _std_error['2'] = np.sqrt(np.diag(_robust_cov['2']))
+        return _std_error
+
+    def _calculate_z_values(self):
+        _std_error = self._calculate_robust_standard_errors
+        _z_values = dict()
+        _z_values['1'] = self.lambda_1_coefficients / _std_error['1']
+        _z_values['1'] = self.lambda_2_coefficients / _std_error['2']
+        return _z_values
+
+    def _calculate_p_values(self):
+        _z_values = self._calculate_z_values()
+        _p_values = dict()
+        _p_values['1'] = scipy.stats.norm.sf(abs(_z_values['1'])) * 2
+        _p_values['2'] = scipy.stats.norm.sf(abs(_z_values['2'])) * 2
+        return _p_values
 
 
