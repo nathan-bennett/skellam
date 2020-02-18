@@ -65,68 +65,61 @@ class SkellamMetrics:
     def _calculate_lambda(self):
         """Create arrays for our predictions of the two Poisson distributions
         """
-        _lambda = dict()
-        _lambda['0'] = self.convert_to_array(np.exp(np.squeeze(self._x0 @ self.lambda_0_coefficients)))
-        _lambda['1'] = self.convert_to_array(np.exp(np.squeeze(self._x1 @ self.lambda_1_coefficients)))
-        return _lambda
+        _lambda0 = self.convert_to_array(np.exp(np.squeeze(self._x0 @ self.lambda_0_coefficients)))
+        _lambda1 = self.convert_to_array(np.exp(np.squeeze(self._x1 @ self.lambda_1_coefficients)))
+        return _lambda0, _lambda1
 
     def _calculate_v(self):
         """Create diagonal matrix consisting of our predictions of the Poisson distributions
         """
-        _lambda = self._calculate_lambda()
-        _v = dict()
-        _v['0'] = np.diagflat(_lambda['0'])
-        _v['1'] = np.diagflat(_lambda['1'])
-        return _v
+        _lambda0, _lambda1 = self._calculate_lambda()
+        _v0 = np.diagflat(_lambda0)
+        _v1 = np.diagflat(_lambda1)
+        return _v0, _v1
 
     def _calculate_w(self):
         """Create a diagonal matrix consisting of the difference between our predictions of the 2 Poisson distributions
         with their observed values
         """
-        _lambda = self._calculate_lambda()
-        _w = dict()
-        _w['0'] = np.diagflat((self.l0 - _lambda['0'].reshape(-1, 1)) ** 2)
-        _w['1'] = np.diagflat((self.l1 - _lambda['1'].reshape(-1, 1)) ** 2)
-        return _w
+        _lambda0, _lambda1 = self._calculate_lambda()
+        _w0 = np.diagflat((self.l0 - _lambda0.reshape(-1, 1)) ** 2)
+        _w1 = np.diagflat((self.l1 - _lambda1.reshape(-1, 1)) ** 2)
+        return _w0, _w1
 
     def _calculate_robust_covariance(self):
         """Calculate robust variance covariance matrices for our two sets of coefficients
         """
-        _v = self._calculate_v()
-        _w = self._calculate_w()
-        _robust_cov = dict()
-        _robust_cov['0'] = np.linalg.inv(np.dot(np.dot(self._x0.T, _v['0']), self._x0)) \
-                           * np.dot(np.dot(self._x0.T, _w['0']), self._x0) \
-                           * np.linalg.inv(np.dot(np.dot(self._x0.T, _v['0']), self._x0))
-        _robust_cov['1'] = np.linalg.inv(np.dot(np.dot(self._x1.T, _v['1']), self._x1)) \
-                           * np.dot(np.dot(self._x1.T, _w['1']), self._x1) \
-                           * np.linalg.inv(np.dot(np.dot(self._x1.T, _v['1']), self._x1))
-        return _robust_cov
+        _v0, _v1 = self._calculate_v()
+        _w0, _w1 = self._calculate_w()
+        _robust_cov0 = np.linalg.inv(np.dot(np.dot(self._x0.T, _v0), self._x0)) \
+                           * np.dot(np.dot(self._x0.T, _w0), self._x0) \
+                           * np.linalg.inv(np.dot(np.dot(self._x0.T, _v0), self._x0))
+        _robust_cov1 = np.linalg.inv(np.dot(np.dot(self._x1.T, _v1), self._x1)) \
+                           * np.dot(np.dot(self._x1.T, _w1), self._x1) \
+                           * np.linalg.inv(np.dot(np.dot(self._x1.T, _v1), self._x1))
+        return _robust_cov0, _robust_cov1
 
     def _calculate_robust_standard_errors(self):
         """Calculate robust standard errors for our two sets of coefficients by taking the square root of the diagonal
         values in the variance covariance matrices
         """
-        _robust_cov = self._calculate_robust_covariance()
-        _std_error = dict()
-        _std_error['0'] = np.sqrt(np.diag(_robust_cov['0']))
-        _std_error['1'] = np.sqrt(np.diag(_robust_cov['1']))
-        return _std_error
+        _robust_cov0, _robust_cov1 = self._calculate_robust_covariance()
+        _std_error0 = np.sqrt(np.diag(_robust_cov0))
+        _std_error1 = np.sqrt(np.diag(_robust_cov1))
+        return _std_error0, _std_error1,
 
     def _calculate_z_values(self):
         """Calculate z statistics for our two sets of coefficients
         """
-        _std_error = self._calculate_robust_standard_errors()
-        _z_values = dict()
-        _z_values['0'] = self.lambda_0_coefficients[:, 0] / _std_error['0']
-        _z_values['1'] = self.lambda_1_coefficients[:, 0] / _std_error['1']
-        return _z_values
+        _std_error0, _std_error1 = self._calculate_robust_standard_errors()
+        _z_values0 = self.lambda_0_coefficients[:, 0] / _std_error0
+        _z_values1 = self.lambda_1_coefficients[:, 0] / _std_error1
+        return _z_values0, _z_values1
 
     def _calculate_p_values(self):
         """Calculate p values for our two sets of coefficients
         """
-        _z_values = self._calculate_z_values()
-        _p_values = dict()
-        _p_values['0'] = scipy.stats.norm.sf(abs(_z_values['0'])) * 2
-        _p_values['1'] = scipy.stats.norm.sf(abs(_z_values['1'])) * 2
-        return _p_values
+        _z_values0, _z_values1 = self._calculate_z_values()
+        _p_values0 = scipy.stats.norm.sf(abs(_z_values0)) * 2
+        _p_values1 = scipy.stats.norm.sf(abs(_z_values1)) * 2
+        return _p_values0, _p_values1
