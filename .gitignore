@@ -130,3 +130,10 @@ dmypy.json
 
 .idea/
 skellam_reg_test.ipynb
+Untitled.ipynb
+err
+mlruns/
+out
+run_multi.sh
+skellam_nrl_model.py
+skellam_reg*
