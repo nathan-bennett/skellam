@@ -136,4 +136,4 @@ mlruns/
 out
 run_multi.sh
 skellam_nrl_model.py
-skellam_reg*
+skellam_reg_tests*
