@@ -44,7 +44,7 @@ class SkellamMetrics(SkellamRegression):
         r2 = self.r2()
         return 1 - (1-r2)*(self.sample_length - 1)/(self.sample_length - self.coeff_size - 1)
 
-    def log_likelihood(self):
+    def log_likelihood(self, **kwargs):
         """Returns the maximum of the log likelihood function"""
         return self.max_ll
 
