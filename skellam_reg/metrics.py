@@ -1,65 +1,29 @@
 #!/usr/bin/env python
 import numpy as np
 import scipy
-import pandas as pd
+from skellam_reg import SkellamRegression
 
 
-class SkellamMetrics:
-    def __init__(self, x, y, y_hat, model, l0, l1):
-        self._y = y
+class SkellamMetrics(SkellamRegression):
+    def __init__(self, x_metrics, y_metrics, y_hat, model, l0, l1, *args, **kwargs):
+        self._y = y_metrics
         self._y_hat = y_hat
         self.model = model
         self.l0 = self.convert_to_array(l0)
         self.l1 = self.convert_to_array(l1)
-        self._x0, self._x1 = self._split_or_duplicate_x(x)
+        self._x0, self._x1 = self.split_or_duplicate_x(x_metrics)
         self.max_ll = self.model.fun
         self.coeff_size = self._x0.shape[1]
         self.lambda_0_coefficients = self.model.x[0 : self.coeff_size].reshape(-1, 1)
         self.lambda_1_coefficients = self.model.x[self.coeff_size :].reshape(-1, 1)
         self.sample_length = len(self._y)
+        super(SkellamRegression, self).__init__(*args, **kwargs)
 
-    @staticmethod
-    def convert_to_array(_x):
-        if isinstance(_x, np.ndarray) and _x.ndim == 1:
-            return _x.reshape(-1, 1)
-        elif isinstance(_x, pd.core.series.Series):
-            return _x.values.reshape(-1, 1)
-        else:
-            return _x
+    def split_or_duplicate_x(self, _x_metrics):
+        return super().split_or_duplicate_x(_x_metrics)
 
-    def _split_or_duplicate_x(self, x):
-        """This function aims to to create x0 and x1 by either duplicating x, if x is an array or series, otherwise
-        if x is a list then we will split the list where the first element will be equal to x0 whilst the second
-        element will be equal to x1
-        """
-        if (
-            isinstance(x, np.ndarray)
-            or isinstance(x, pd.core.series.Series)
-            or isinstance(x, pd.core.frame.DataFrame)
-        ):
-            x0, x1 = x, x
-        elif len(x) == 2:
-            if (
-                isinstance(x[0], np.ndarray)
-                or isinstance(x[0], pd.core.series.Series)
-                or isinstance(x, pd.core.frame.DataFrame)
-            ):
-                x0 = self.convert_to_array(x[0])
-            else:
-                x0 = x[0]
-            if (
-                isinstance(x[1], np.ndarray)
-                or isinstance(x[1], pd.core.series.Series)
-                or isinstance(x, pd.core.frame.DataFrame)
-            ):
-                x1 = self.convert_to_array(x[1])
-            else:
-                x1 = x[1]
-        else:
-            raise ValueError(
-                "x must either be an a list of two arrays or a single array"
-            )
-        return x0, x1
+    def convert_to_array(self, _array):
+        return super().convert_to_array(_array)
 
     def sse(self):
         return ((self._y - self._y_hat) ** 2).sum()

@@ -14,10 +14,9 @@ class SkellamRegression:
         self.l2 = l2
         self.add_coefficients = add_coefficients
         self.coeff_size = None
-        self.x0, self.x1 = self._split_or_duplicate_x(x)
+        self.x0, self.x1 = self.split_or_duplicate_x(x)
 
-    @staticmethod
-    def convert_to_array(_x):
+    def convert_to_array(self, _x):
         if isinstance(_x, np.ndarray) and _x.ndim == 1:
             return _x.reshape(-1, 1)
         elif isinstance(_x, pd.core.series.Series):
@@ -25,7 +24,7 @@ class SkellamRegression:
         else:
             return _x
 
-    def _split_or_duplicate_x(self, x):
+    def split_or_duplicate_x(self, x):
         """This function aims to to create x0 and x1 by either duplicating x, if x is an array or series, otherwise
         if x is a list then we will split the list where the first element will be equal to x0 whilst the second
         element will be equal to x1
@@ -122,7 +121,7 @@ class SkellamRegression:
         """Using the model created previously, this will predict values of y based on a new array x
         """
         # convert x to be in the correct format - a 2 dimensional numpy array
-        _x0, _x1 = self._split_or_duplicate_x(_x)
+        _x0, _x1 = self.split_or_duplicate_x(_x)
 
         lambda_0_coefficients = self._results.x[0 : self.coeff_size].reshape(-1, 1)
         lambda_1_coefficients = self._results.x[self.coeff_size :].reshape(-1, 1)
@@ -138,7 +137,7 @@ class SkellamRegression:
         """Calculate key metrics such as r2
         """
         if test_x is not None and test_y is not None:
-            test_x_0, test_x_1 = self._split_or_duplicate_x(test_x)
+            test_x_0, test_x_1 = self.split_or_duplicate_x(test_x)
             test_x_values = [test_x_0, test_x_1]
             predictions = self.predict(test_x_values)
             return SkellamMetrics(
