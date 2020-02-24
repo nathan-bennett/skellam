@@ -12,10 +12,12 @@ class SkellamMetrics:
         self.l0 = self.convert_to_array(l0)
         self.l1 = self.convert_to_array(l1)
         self._x0, self._x1 = self._split_or_duplicate_x(x)
-
+        self.max_ll = self.model.fun
         self.coeff_size = self._x0.shape[1]
         self.lambda_0_coefficients = self.model.x[0 : self.coeff_size].reshape(-1, 1)
         self.lambda_1_coefficients = self.model.x[self.coeff_size :].reshape(-1, 1)
+        self.sample_length = len(self._y)
+
 
     @staticmethod
     def convert_to_array(_x):
@@ -77,8 +79,17 @@ class SkellamMetrics:
     def adjusted_r2(self):
         """Calculate adjusted R2 for either the train model or the test model"""
         r2 = self.r2()
-        sample_length = len(self._y)
-        return 1 - (1-r2)*(sample_length - 1)/(sample_length - self.coeff_size - 1)
+        return 1 - (1-r2)*(self.sample_length - 1)/(self.sample_length - self.coeff_size - 1)
+
+    def log_likelihood(self):
+        """Returns the maximum of the log likelihood function"""
+        return self.max_ll
+
+    def aic(self):
+        return 2*self.coeff_size - 2*np.log(self.max_ll)
+
+    def bic(self):
+        return self.coeff_size*np.log(self.sample_length) - 2*np.log(self.max_ll)
 
     def _calculate_lambda(self):
         """Create arrays for our predictions of the two Poisson distributions
