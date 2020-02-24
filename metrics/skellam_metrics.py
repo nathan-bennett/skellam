@@ -70,9 +70,15 @@ class SkellamMetrics:
         return ((self._y - self._y_bar()) ** 2).sum()
 
     def r2(self):
-        """Calculate R2 for either the train model """
+        """Calculate R2 for either the train model or the test model"""
         sse_sst = self.sse() / self.sst()
         return 1 - sse_sst
+
+    def adjusted_r2(self):
+        """Calculate adjusted R2 for either the train model or the test model"""
+        r2 = self.r2()
+        sample_length = len(self._y)
+        return 1 - (1-r2)*(sample_length - 1)/(sample_length - self.coeff_size - 1)
 
     def _calculate_lambda(self):
         """Create arrays for our predictions of the two Poisson distributions

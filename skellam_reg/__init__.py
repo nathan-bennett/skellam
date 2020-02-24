@@ -8,7 +8,6 @@ from scipy.stats import skellam
 
 
 class SkellamRegression:
-
     def __init__(self, x, y, l1, l2, add_coefficients=True):
         self.y = y
         self.l1 = l1
@@ -33,18 +32,32 @@ class SkellamRegression:
         """
         x0 = None
         x1 = None
-        if isinstance(x, np.ndarray) or isinstance(x, pd.core.series.Series) or isinstance(x, pd.core.frame.DataFrame):
+        if (
+            isinstance(x, np.ndarray)
+            or isinstance(x, pd.core.series.Series)
+            or isinstance(x, pd.core.frame.DataFrame)
+        ):
             x0, x1 = x, x
         elif len(x) == 2:
-            if isinstance(x[0], np.ndarray) or isinstance(x[0], pd.core.series.Series) or isinstance(x, pd.core.frame.DataFrame):
+            if (
+                isinstance(x[0], np.ndarray)
+                or isinstance(x[0], pd.core.series.Series)
+                or isinstance(x, pd.core.frame.DataFrame)
+            ):
                 x0 = self.convert_to_array(x[0])
-            if isinstance(x[1], np.ndarray) or isinstance(x[1], pd.core.series.Series) or isinstance(x, pd.core.frame.DataFrame):
+            if (
+                isinstance(x[1], np.ndarray)
+                or isinstance(x[1], pd.core.series.Series)
+                or isinstance(x, pd.core.frame.DataFrame)
+            ):
                 x1 = self.convert_to_array(x[1])
             else:
                 x0 = x[0]
                 x1 = x[1]
         if x0 is None and x1 is None:
-            raise ValueError("x must either be an a list of two arrays or a single array")
+            raise ValueError(
+                "x must either be an a list of two arrays or a single array"
+            )
         return x0, x1
 
     def _skellam_pmf(self, x, mu0, mu1):
@@ -58,13 +71,15 @@ class SkellamRegression:
         """Function to calculate the negative log likelihood of the skellam distribution
         """
         self.coeff_size = self.x0.shape[1]
-        coefficients1 = coefficients[0:self.coeff_size].reshape(-1, 1)
-        coefficients2 = coefficients[self.coeff_size:].reshape(-1, 1)
+        coefficients1 = coefficients[0 : self.coeff_size].reshape(-1, 1)
+        coefficients2 = coefficients[self.coeff_size :].reshape(-1, 1)
 
         lambda0 = np.squeeze(self.x0 @ coefficients1)
         lambda1 = np.squeeze(self.x1 @ coefficients2)
 
-        neg_ll = -np.sum(np.log(self._skellam_pmf(self.y, np.exp(lambda0), np.exp(lambda1))))
+        neg_ll = -np.sum(
+            np.log(self._skellam_pmf(self.y, np.exp(lambda0), np.exp(lambda1)))
+        )
 
         return neg_ll
 
@@ -75,20 +90,24 @@ class SkellamRegression:
         if x0 is None:
             x0 = np.ones(x_shape)
 
-            first_run = minimize(self.log_likelihood,
-                                 x0,
-                                 method=optimization_method,
-                                 options={'disp': display_optimisation})
+            first_run = minimize(
+                self.log_likelihood,
+                x0,
+                method=optimization_method,
+                options={"disp": display_optimisation},
+            )
 
             x0 = first_run.x
         else:
             if x0.shape[0] != x_shape:
                 raise ValueError("Initial numbers are not equal to: {}".format(x_shape))
 
-        results = minimize(self.log_likelihood,
-                           x0,
-                           method=optimization_method,
-                           options={'disp': display_optimisation})
+        results = minimize(
+            self.log_likelihood,
+            x0,
+            method=optimization_method,
+            options={"disp": display_optimisation},
+        )
 
         self._results = results
 
@@ -105,8 +124,8 @@ class SkellamRegression:
         # convert x to be in the correct format - a 2 dimensional numpy array
         _x0, _x1 = self._split_or_duplicate_x(_x)
 
-        lambda_0_coefficients = self._results.x[0: self.coeff_size].reshape(-1, 1)
-        lambda_1_coefficients = self._results.x[self.coeff_size:].reshape(-1, 1)
+        lambda_0_coefficients = self._results.x[0 : self.coeff_size].reshape(-1, 1)
+        lambda_1_coefficients = self._results.x[self.coeff_size :].reshape(-1, 1)
 
         _lambda0 = np.squeeze(_x0 @ lambda_0_coefficients)
         _lambda1 = np.squeeze(_x1 @ lambda_1_coefficients)
@@ -122,9 +141,12 @@ class SkellamRegression:
             test_x_0, test_x_1 = self._split_or_duplicate_x(test_x)
             test_x_values = [test_x_0, test_x_1]
             predictions = self.predict(test_x_values)
-            return SkellamMetrics(test_x_values, test_y, predictions, self._results, self.l1, self.l2)
+            return SkellamMetrics(
+                test_x_values, test_y, predictions, self._results, self.l1, self.l2
+            )
         else:
             train_x_values = [self.x0, self.x1]
             predictions = self.predict(train_x_values)
-            return SkellamMetrics(train_x_values, self.y, predictions, self._results, self.l1, self.l2)
-
+            return SkellamMetrics(
+                train_x_values, self.y, predictions, self._results, self.l1, self.l2
+            )
