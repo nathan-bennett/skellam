@@ -21,7 +21,7 @@ class SkellamMetrics:
 
     @staticmethod
     def split_or_duplicate_x(x):
-        return ArrayUtils.split_or_duplicate_x(x)
+        return ArrayUtils.split_or_duplicate_x(x, False)
 
     def sse(self):
         return ((self._y - self._y_hat) ** 2).sum()
@@ -55,10 +55,10 @@ class SkellamMetrics:
     def _calculate_lambda(self):
         """Create arrays for our predictions of the two Poisson distributions
         """
-        _lambda0 = self.convert_to_array(
+        _lambda0 = ArrayUtils.convert_to_array(
             np.exp(np.squeeze(self._x0 @ self.lambda_0_coefficients))
         )
-        _lambda1 = self.convert_to_array(
+        _lambda1 = ArrayUtils.convert_to_array(
             np.exp(np.squeeze(self._x1 @ self.lambda_1_coefficients))
         )
         return _lambda0, _lambda1

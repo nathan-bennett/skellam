@@ -8,16 +8,17 @@ from sharedUtils import ArrayUtils
 
 
 class SkellamRegression:
-    def __init__(self, x, y, l0, l1, add_coefficients=True):
+    def __init__(self, x, y, l0, l1, add_intercept=True):
         self.y = y
         self.l0 = l0
         self.l1 = l1
-        self.add_coefficients = add_coefficients
+        self.add_intercept = add_intercept
         self.coeff_size = None
-        self.x0, self.x1 = self.split_or_duplicate_x(x)
+        self.x0, self.x1 = self.split_or_duplicate_x(x, self.add_intercept)
 
-    def split_or_duplicate_x(self, x):
-        return ArrayUtils.split_or_duplicate_x(x)
+    @staticmethod
+    def split_or_duplicate_x(x, add_intercept):
+        return ArrayUtils.split_or_duplicate_x(x, add_intercept)
 
     @staticmethod
     def _skellam_pmf(x, mu0, mu1):
@@ -78,11 +79,11 @@ class SkellamRegression:
         """
         return self._train(x0, optimization_method, display_optimisation)
 
-    def predict(self, _x):
+    def predict(self, _x, add_intercept=True):
         """Using the model created previously, this will predict values of y based on a new array x
         """
         # convert x to be in the correct format - a 2 dimensional numpy array
-        _x0, _x1 = self.split_or_duplicate_x(_x)
+        _x0, _x1 = self.split_or_duplicate_x(_x, add_intercept)
 
         lambda_0_coefficients = self._results.x[0 : self.coeff_size].reshape(-1, 1)
         lambda_1_coefficients = self._results.x[self.coeff_size :].reshape(-1, 1)
@@ -99,14 +100,16 @@ class SkellamRegression:
         """
         train_x_values = [self.x0, self.x1]
         if test_x is not None and test_y is not None:
-            test_x_0, test_x_1 = self.split_or_duplicate_x(test_x)
+            test_x_0, test_x_1 = self.split_or_duplicate_x(test_x, self.add_intercept)
             test_x_values = [test_x_0, test_x_1]
-            predictions = self.predict(test_x_values)
+            # We do not add intercept as it already has been added
+            predictions = self.predict(test_x_values, False)
             return SkellamMetrics(
                 test_x_values, test_y, predictions, self._results, self.l0, self.l1, train_x_values
             )
         else:
-            predictions = self.predict(train_x_values)
+            # We do not add intercept as it already has been added
+            predictions = self.predict(train_x_values, False)
             return SkellamMetrics(
                 train_x_values, self.y, predictions, self._results, self.l0, self.l1, train_x_values
             )
