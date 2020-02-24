@@ -66,7 +66,7 @@ class SkellamRegression:
         px = skellam.pmf(x, mu1=mu0, mu2=mu1, loc=0)
         return px
 
-    def log_likelihood(self, coefficients):
+    def _log_likelihood(self, coefficients):
         """Function to calculate the negative log likelihood of the skellam distribution
         """
         self.coeff_size = self.x0.shape[1]
@@ -90,7 +90,7 @@ class SkellamRegression:
             x0 = np.ones(x_shape)
 
             first_run = minimize(
-                self.log_likelihood,
+                self._log_likelihood,
                 x0,
                 method=optimization_method,
                 options={"disp": display_optimisation},
@@ -102,7 +102,7 @@ class SkellamRegression:
                 raise ValueError("Initial numbers are not equal to: {}".format(x_shape))
 
         results = minimize(
-            self.log_likelihood,
+            self._log_likelihood,
             x0,
             method=optimization_method,
             options={"disp": display_optimisation},
