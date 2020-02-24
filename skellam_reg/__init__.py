@@ -105,11 +105,23 @@ class SkellamRegression:
             # We do not add intercept as it already has been added
             predictions = self.predict(test_x_values, False)
             return SkellamMetrics(
-                test_x_values, test_y, predictions, self._results, self.l0, self.l1, train_x_values
+                test_x_values,
+                test_y,
+                predictions,
+                self._results,
+                self.l0,
+                self.l1,
+                train_x_values,
             )
         else:
             # We do not add intercept as it already has been added
             predictions = self.predict(train_x_values, False)
             return SkellamMetrics(
-                train_x_values, self.y, predictions, self._results, self.l0, self.l1, train_x_values
+                train_x_values,
+                self.y,
+                predictions,
+                self._results,
+                self.l0,
+                self.l1,
+                train_x_values,
             )

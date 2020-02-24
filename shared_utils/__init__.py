@@ -4,7 +4,6 @@ import pandas as pd
 
 
 class ArrayUtils:
-
     @staticmethod
     def convert_to_array(_x):
         if isinstance(_x, np.ndarray) and _x.ndim == 1:
@@ -27,22 +26,22 @@ class ArrayUtils:
         x0 = None
         x1 = None
         if (
-                isinstance(x, np.ndarray)
-                or isinstance(x, pd.core.series.Series)
-                or isinstance(x, pd.core.frame.DataFrame)
+            isinstance(x, np.ndarray)
+            or isinstance(x, pd.core.series.Series)
+            or isinstance(x, pd.core.frame.DataFrame)
         ):
             x0, x1 = x, x
         elif len(x) == 2:
             if (
-                    isinstance(x[0], np.ndarray)
-                    or isinstance(x[0], pd.core.series.Series)
-                    or isinstance(x, pd.core.frame.DataFrame)
+                isinstance(x[0], np.ndarray)
+                or isinstance(x[0], pd.core.series.Series)
+                or isinstance(x, pd.core.frame.DataFrame)
             ):
                 x0 = ArrayUtils.convert_to_array(x[0])
             if (
-                    isinstance(x[1], np.ndarray)
-                    or isinstance(x[1], pd.core.series.Series)
-                    or isinstance(x, pd.core.frame.DataFrame)
+                isinstance(x[1], np.ndarray)
+                or isinstance(x[1], pd.core.series.Series)
+                or isinstance(x, pd.core.frame.DataFrame)
             ):
                 x1 = ArrayUtils.convert_to_array(x[1])
             else:
