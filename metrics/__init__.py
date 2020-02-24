@@ -1,29 +1,27 @@
 #!/usr/bin/env python
 import numpy as np
 import scipy
-from skellam_reg import SkellamRegression
+from sharedUtils import ArrayUtils
 
 
-class SkellamMetrics(SkellamRegression):
-    def __init__(self, x_metrics, y_metrics, y_hat, model, l0, l1, *args, **kwargs):
+class SkellamMetrics:
+    def __init__(self, x_metrics, y_metrics, y_hat, model, l0, l1, training_values):
         self._y = y_metrics
         self._y_hat = y_hat
         self.model = model
-        self.l0 = self.convert_to_array(l0)
-        self.l1 = self.convert_to_array(l1)
+        self.l0 = ArrayUtils.convert_to_array(l0)
+        self.l1 = ArrayUtils.convert_to_array(l1)
+        self.training_values = training_values
         self._x0, self._x1 = self.split_or_duplicate_x(x_metrics)
         self.max_ll = self.model.fun
         self.coeff_size = self._x0.shape[1]
         self.lambda_0_coefficients = self.model.x[0 : self.coeff_size].reshape(-1, 1)
         self.lambda_1_coefficients = self.model.x[self.coeff_size :].reshape(-1, 1)
-        self.sample_length = len(self._y)
-        super(SkellamRegression, self).__init__(*args, **kwargs)
+        self.train_length = len(training_values[0])
 
-    def split_or_duplicate_x(self, _x_metrics):
-        return super().split_or_duplicate_x(_x_metrics)
-
-    def convert_to_array(self, _array):
-        return super().convert_to_array(_array)
+    @staticmethod
+    def split_or_duplicate_x(x):
+        return ArrayUtils.split_or_duplicate_x(x)
 
     def sse(self):
         return ((self._y - self._y_hat) ** 2).sum()
@@ -42,7 +40,7 @@ class SkellamMetrics(SkellamRegression):
     def adjusted_r2(self):
         """Calculate adjusted R2 for either the train model or the test model"""
         r2 = self.r2()
-        return 1 - (1-r2)*(self.sample_length - 1)/(self.sample_length - self.coeff_size - 1)
+        return 1 - (1-r2)*(self.train_length - 1)/(self.train_length - self.coeff_size - 1)
 
     def log_likelihood(self):
         """Returns the maximum of the log likelihood function"""
@@ -52,7 +50,7 @@ class SkellamMetrics(SkellamRegression):
         return 2*self.coeff_size - 2*np.log(self.max_ll)
 
     def bic(self):
-        return self.coeff_size*np.log(self.sample_length) - 2*np.log(self.max_ll)
+        return self.coeff_size*np.log(self.train_length) - 2*np.log(self.max_ll)
 
     def _calculate_lambda(self):
         """Create arrays for our predictions of the two Poisson distributions
