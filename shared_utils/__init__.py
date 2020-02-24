@@ -15,7 +15,11 @@ class ArrayUtils:
             return _x
 
     @staticmethod
-    def split_or_duplicate_x(x):
+    def add_intercept(train):
+        return np.concatenate((np.ones(len(train))[:, np.newaxis], train), axis=1)
+
+    @staticmethod
+    def split_or_duplicate_x(x, add_intercept=True):
         """This function aims to to create x0 and x1 by either duplicating x, if x is an array or series, otherwise
         if x is a list then we will split the list where the first element will be equal to x0 whilst the second
         element will be equal to x1
@@ -48,4 +52,7 @@ class ArrayUtils:
             raise ValueError(
                 "x must either be an a list of two arrays or a single array"
             )
+        if add_intercept:
+            x0 = ArrayUtils.add_intercept(x0)
+            x1 = ArrayUtils.add_intercept(x1)
         return x0, x1
