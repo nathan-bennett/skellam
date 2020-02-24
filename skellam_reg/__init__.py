@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 from scipy.optimize import minimize
-from metrics.skellam_metrics import SkellamMetrics
+from skellam_reg.metrics import SkellamMetrics
 import pandas as pd
 import warnings
 from scipy.stats import skellam
