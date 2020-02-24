@@ -18,7 +18,6 @@ class SkellamMetrics:
         self.lambda_1_coefficients = self.model.x[self.coeff_size :].reshape(-1, 1)
         self.sample_length = len(self._y)
 
-
     @staticmethod
     def convert_to_array(_x):
         if isinstance(_x, np.ndarray) and _x.ndim == 1:
