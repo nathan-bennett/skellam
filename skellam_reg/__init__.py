@@ -4,7 +4,7 @@ from scipy.optimize import minimize
 from metrics import SkellamMetrics
 import warnings
 from scipy.stats import skellam
-from sharedUtils import ArrayUtils
+from shared_utils import ArrayUtils
 
 
 class SkellamRegression:

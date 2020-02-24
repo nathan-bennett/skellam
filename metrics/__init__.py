@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import scipy
-from sharedUtils import ArrayUtils
+from shared_utils import ArrayUtils
 
 
 class SkellamMetrics:
