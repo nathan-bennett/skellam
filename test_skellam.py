@@ -13,7 +13,7 @@ x = np.ones(1000)
 
 
 def test_model():
-    model = SkellamRegression(x.reshape(-1, 1),
+    model = SkellamRegression(x,
                               y,
                               y1,
                               y2,

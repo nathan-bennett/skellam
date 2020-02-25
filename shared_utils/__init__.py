@@ -31,18 +31,19 @@ class ArrayUtils:
                 or isinstance(x, pd.core.series.Series)
                 or isinstance(x, pd.core.frame.DataFrame)
         ):
-            x0, x1 = x, x
+            x0 = ArrayUtils.convert_to_array(x)
+            x1 = ArrayUtils.convert_to_array(x)
         elif len(x) == 2:
             if (
                     isinstance(x[0], np.ndarray)
                     or isinstance(x[0], pd.core.series.Series)
-                    or isinstance(x, pd.core.frame.DataFrame)
+                    or isinstance(x[0], pd.core.frame.DataFrame)
             ):
                 x0 = ArrayUtils.convert_to_array(x[0])
             if (
                     isinstance(x[1], np.ndarray)
                     or isinstance(x[1], pd.core.series.Series)
-                    or isinstance(x, pd.core.frame.DataFrame)
+                    or isinstance(x[1], pd.core.frame.DataFrame)
             ):
                 x1 = ArrayUtils.convert_to_array(x[1])
             else:
