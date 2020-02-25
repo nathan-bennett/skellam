@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ["scipy"]
+requirements = ["scipy>==1.2.0"]
 
 setup(
-    name="notebookc",
+    name="skellam",
     version="0.0.1",
     author="Nathan Bennett",
     author_email="nbennett4122@gmail.com",
