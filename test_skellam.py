@@ -14,9 +14,9 @@ x = np.ones(1000)
 
 def test_model():
     model = SkellamRegression(x.reshape(-1, 1),
-                              y.reshape(1, -1),
-                              y1.reshape(1, -1),
-                              y2.reshape(1, -1),
+                              y,
+                              y1,
+                              y2,
                               add_intercept=True)
 
     model.train()
