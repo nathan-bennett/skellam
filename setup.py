@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ["libblas-dev>=3", "liblapack-dev>=liblapack"]
+requirements = ["libblas-dev>=3", "liblapack-dev>=3"]
 
 setup(
     name="notebookc",
