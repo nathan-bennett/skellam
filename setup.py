@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ["libblas-dev>=3", "liblapack-dev>=3"]
+requirements = ["scipy"]
 
 setup(
     name="notebookc",
@@ -14,6 +14,7 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/nathan-bennett/skellam",
+    setup_requires=['numpy'],
     packages=find_packages(),
     install_requires=requirements,
     classifiers=[
